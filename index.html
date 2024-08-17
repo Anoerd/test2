@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>運費計算器</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .input-group {
+            margin-bottom: 10px;
+        }
+        label {
+            display: inline-block;
+            width: 150px;
+        }
+        input[type="number"] {
+            width: calc(100% - 160px);
+            padding: 8px;
+            box-sizing: border-box;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            width: 100%;
+            padding: 8px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #result, #calculation {
+            margin-top: 20px;
+            white-space: pre-wrap;
+            background-color: #f9f9f9;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    <h1>運費計算器</h1>
+    <div class="input-group">
+        <input type="checkbox" id="ignoreVolume" name="ignoreVolume">
+        <label for="ignoreVolume">不計算材積</label>
+    </div>
+    <div class="input-group">
+        <label for="length">長 (cm):</label>
+        <input type="number" id="length" step="0.01">
+    </div>
+    <div class="input-group">
+        <label for="width">寬 (cm):</label>
+        <input type="number" id="width" step="0.01">
+    </div>
+    <div class="input-group">
+        <label for="height">高 (cm):</label>
+        <input type="number" id="height" step="0.01">
+    </div>
+    <div class="input-group">
+        <label for="actualWeight">實重 (kg):</label>
+        <input type="number" id="actualWeight" step="0.01">
+    </div>
+    <div class="input-group">
+        <label for="pricePerKg">每公斤運費 (元):</label>
+        <input type="number" id="pricePerKg" step="0.01">
+    </div>
+    <button onclick="calculate()">計算</button>
+    <div id="result"></div>
+    <div id="calculation"></div>
+
+    <script>
+        function calculate() {
+            const ignoreVolume = document.getElementById('ignoreVolume').checked;
+            const length = parseFloat(document.getElementById('length').value);
+            const width = parseFloat(document.getElementById('width').value);
+            const height = parseFloat(document.getElementById('height').value);
+            const actualWeight = parseFloat(document.getElementById('actualWeight').value);
+            const pricePerKg = parseFloat(document.getElementById('pricePerKg').value);
+
+            let volumetricWeight, volumetricFee, shippingFee;
+            let calculationText = '';
+
+            if (ignoreVolume) {
+                shippingFee = actualWeight * pricePerKg;
+                calculationText = `完整計算過程：
+1. 不計算材積，直接使用實重計算運費
+2. 完整運費 = 實重 * 每公斤運費
+   = ${actualWeight} * ${pricePerKg}
+   = ${shippingFee.toFixed(2)} 元`;
+            } else {
+                const volumetricWeightRaw = (length * width * height) / 6000;
+                volumetricWeight = Math.ceil(volumetricWeightRaw);
+                volumetricFee = Math.max(volumetricWeight - actualWeight * 2.5, 0);
+                shippingFee = volumetricFee * pricePerKg + actualWeight * pricePerKg;
+
+                calculationText = `完整計算過程：
+1. 材積重量 = ceil((長 * 寬 * 高) / 6000)
+   = ceil((${length} * ${width} * ${height}) / 6000)
+   = ceil(${volumetricWeightRaw.toFixed(2)})
+   = ${volumetricWeight} kg
+
+2. 材積費 = max(材積重量 - (實重 * 2.5), 0)
+   = max(${volumetricWeight} - (${actualWeight} * 2.5), 0)
+   = ${volumetricFee.toFixed(2)} kg
+
+3. 完整運費 = (材積費 * 每公斤運費) + (實重 * 每公斤運費)
+   = (${volumetricFee.toFixed(2)} * ${pricePerKg}) + (${actualWeight} * ${pricePerKg})
+   = ${shippingFee.toFixed(2)} 元
+
+註：材積重量的計算結果已無條件進位至整數。`;
+            }
+
+            const resultElement = document.getElementById('result');
+            resultElement.textContent = `完整運費: ${shippingFee.toFixed(2)} 元`;
+            if (!ignoreVolume) {
+                resultElement.textContent = `材積重量: ${volumetricWeight} kg\n` + resultElement.textContent;
+            }
+
+            const calculationElement = document.getElementById('calculation');
+            calculationElement.textContent = calculationText;
+        }
+    </script>
+</body>
+</html>
